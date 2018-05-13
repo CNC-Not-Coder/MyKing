@@ -1,0 +1,7 @@
+D:\Documents\MyKing\Server\Main\MainServer\MainServer\bin\Debug\MainServer.exe.config
+D:\Documents\MyKing\Server\Main\MainServer\MainServer\bin\Debug\MainServer.exe
+D:\Documents\MyKing\Server\Main\MainServer\MainServer\bin\Debug\MainServer.pdb
+D:\Documents\MyKing\Server\Main\MainServer\MainServer\obj\Debug\MainServer.csprojResolveAssemblyReference.cache
+D:\Documents\MyKing\Server\Main\MainServer\MainServer\obj\Debug\MainServer.exe
+D:\Documents\MyKing\Server\Main\MainServer\MainServer\obj\Debug\MainServer.pdb
+D:\Documents\MyKing\Server\Main\MainServer\MainServer\bin\Debug\WebSocket4Net.dll
