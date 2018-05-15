@@ -11,7 +11,7 @@ namespace MainServer
 {
     class NetworkManager
     {
-        public delegate void OnAcceptOneClientDelegate(ConnectInstance conn);
+        public delegate void OnAcceptOneClientDelegate(Socket client);
         public int Port
         {
             get
@@ -26,8 +26,7 @@ namespace MainServer
                 return m_AcceptDelegate;
             }
         }
-        private List<ConnectInstance> m_ConnectList = new List<ConnectInstance>();
-        private ArrayList m_Clients = new ArrayList();
+
         private Socket m_Listener = null;
         private ArrayList m_Listeners = new ArrayList();
         private int m_Port = 9999;
@@ -39,8 +38,6 @@ namespace MainServer
 
         public void Clear()
         {
-            m_ConnectList.Clear();
-            m_Clients.Clear();
             m_Listener = null;
             m_Listeners.Clear();
             m_Port = 9999;
@@ -94,12 +91,9 @@ namespace MainServer
                 Socket newClient = m_Listener.Accept();
                 if (newClient != null)
                 {
-                    m_Listener.GetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.Error);
-                    ConnectInstance conn = new ConnectInstance(newClient);
-                    m_ConnectList.Add(conn);
                     if (m_AcceptDelegate != null)
                     {
-                        m_AcceptDelegate(conn);
+                        m_AcceptDelegate(newClient);
                     }
                     IPEndPoint ip = (IPEndPoint)newClient.RemoteEndPoint;
                     LogModule.LogInfo("Accept one client, ip={0}, port={1}", ip.Address, ip.Port);
@@ -110,39 +104,11 @@ namespace MainServer
                 LogModule.LogInfo("Accept client error, Message:{0}", e.Message);
             }
 
-            try
-            {
-                GetClientList(m_Clients);
-                Socket.Select(null, null, m_Clients, 0);
-                if (m_Clients.Count > 0)
-                {
-                }
-
-                GetClientList(m_Clients);
-                Socket.Select(m_Clients, null, null, 0);
-                if (m_Clients.Count > 0)
-                {
-                }
-
-                GetClientList(m_Clients);
-                Socket.Select(null, m_Clients, null, 0);
-                if (m_Clients.Count > 0)
-                {
-                }
-            }
-            catch (Exception e)
-            {
-
-                LogModule.LogInfo("Select error, Message:{0}", e.Message);
-            }
+            
         }
 
         public void Stop()
         {
-            foreach(var connect in m_ConnectList)
-            {
-                connect.Shutdown();
-            }
             m_Listener.Close();
 
             Clear();
@@ -154,18 +120,6 @@ namespace MainServer
             {
                 listeners.Clear();
                 listeners.Add(m_Listener);
-            }
-        }
-
-        private void GetClientList(ArrayList clients)
-        {
-            if (clients != null)
-            {
-                clients.Clear();
-                for (int i = 0; i < m_ConnectList.Count; i++)
-                {
-                    clients.Add(m_ConnectList[i].Client);
-                }
             }
         }
     }

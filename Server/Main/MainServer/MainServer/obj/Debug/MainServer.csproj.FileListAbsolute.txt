@@ -5,3 +5,6 @@ D:\Documents\MyKing\Server\Main\MainServer\MainServer\obj\Debug\MainServer.cspro
 D:\Documents\MyKing\Server\Main\MainServer\MainServer\obj\Debug\MainServer.exe
 D:\Documents\MyKing\Server\Main\MainServer\MainServer\obj\Debug\MainServer.pdb
 D:\Documents\MyKing\Server\Main\MainServer\MainServer\bin\Debug\WebSocket4Net.dll
+C:\Users\limotao\Documents\GitHub\MyKing\Server\Main\MainServer\MainServer\bin\Debug\MainServer.exe.config
+C:\Users\limotao\Documents\GitHub\MyKing\Server\Main\MainServer\MainServer\obj\Debug\MainServer.exe
+C:\Users\limotao\Documents\GitHub\MyKing\Server\Main\MainServer\MainServer\obj\Debug\MainServer.pdb
