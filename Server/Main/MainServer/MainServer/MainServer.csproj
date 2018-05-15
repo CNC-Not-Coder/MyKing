@@ -48,6 +48,7 @@
   <ItemGroup>
     <Compile Include="ConnectInstance.cs" />
     <Compile Include="ConnectManager.cs" />
+    <Compile Include="CycleStream.cs" />
     <Compile Include="LogModule.cs" />
     <Compile Include="NetworkManager.cs" />
     <Compile Include="Program.cs" />

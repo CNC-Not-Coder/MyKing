@@ -7,51 +7,18 @@ using System.Threading.Tasks;
 
 namespace MainServer
 {
-    class CycleStream
-    {
-        public int HeadIndex = 0;
-        public int TailIndex = 0;
-        public byte[] ByteStream = null;
-        public CycleStream(int size)
-        {
-            ByteStream = new byte[size];
-            HeadIndex = 0;
-            TailIndex = 0;
-        }
-        public void Reset()
-        {
-            HeadIndex = 0;
-            TailIndex = 0;
-        }
-        public int GetSize()
-        {
-            return ByteStream.Length;
-        }
-        public bool IsFull()
-        {
-            if ((HeadIndex - TailIndex) == 1)
-            {
-                return true;
-            }
-            else if (TailIndex == GetSize()-1 && HeadIndex == 0)
-            {
-                return true;
-            }
-            return false;
-        }
-    }
     class ConnectInstance
     {
         private Socket m_Client = null;
         private CycleStream m_InputStream = new CycleStream(1024 * 8);
         private CycleStream m_OutputStream = new CycleStream(1024 * 8);
+        private byte[] m_temp = new byte[1024]; // 用于发送和接收的临时buffer
         public Socket Client
         {
             get { return m_Client; }
         }
         public ConnectInstance()
         {
-            m_Client = null;
         }
         public ConnectInstance(Socket client)
         {
@@ -86,8 +53,7 @@ namespace MainServer
 
             LogModule.LogInfo("OnSelectError : {0}", err);
 
-            m_Client.Close();
-            m_Client = null;
+            Shutdown();
         }
 
         public void OnSelectRead()
@@ -99,23 +65,14 @@ namespace MainServer
                     return;
                 }
                 SocketError err = SocketError.Success;
-                int offset = 0;
-                int size = 0;
-                if (m_InputStream.TailIndex < m_InputStream.HeadIndex)
-                {//tail在head前面，从tail写到head - 1
-                    offset = m_InputStream.TailIndex;
-                    size = m_InputStream.HeadIndex - m_InputStream.TailIndex;
-                }
-                else
-                {//tail在head前面或者重合
-                    offset = m_InputStream.TailIndex;
-                    
-                }
-                int recSize = m_Client.Receive(m_InputStream.ByteStream, offset, size, SocketFlags.None, out err);
-                m_InputStream.HeadIndex += recSize;
-                if (m_InputStream.HeadIndex == m_InputStream.GetSize() - 1)
+                int offset = m_InputStream.GetWriteIndex();
+                int size = Math.Min(m_InputStream.GetLeftSizeToWrite(), m_temp.Length);
+                int recvSize = m_Client.Receive(m_temp, 0, size, SocketFlags.None, out err);
+                int writeSize = m_InputStream.WriteBuffer(m_temp, recvSize);
+                if (writeSize != recvSize)
                 {
-                    m_InputStream.HeadIndex = 0;//从0开始
+                    LogModule.LogInfo("Fatal Error, recvSize != writeSize, socket error : {0}", err);
+                    Shutdown();
                 }
             }
             catch (Exception e)
@@ -126,7 +83,22 @@ namespace MainServer
 
         public void OnSelectWrite()
         {
-
+            try
+            {
+                if (!m_OutputStream.HasData())
+                {
+                    return;
+                }
+                SocketError err = SocketError.Success;
+                int offset = m_OutputStream.GetReadIndex();
+                int size = m_OutputStream.ReadBuffer(m_temp);
+                int sendSize = m_Client.Send(m_temp, 0, size, SocketFlags.None, out err);
+                m_OutputStream.SetReadIndex(sendSize);
+            }
+            catch (Exception e)
+            {
+                LogModule.LogInfo("OnSelectWrite, exception message : {0}", e.Message);
+            }
         }
 
         public void Shutdown()
@@ -134,7 +106,13 @@ namespace MainServer
             if(m_Client != null)
             {
                 m_Client.Close();
+                m_Client = null;
             }
+            Clear();
+        }
+        public void Clear()
+        {
+            m_Client = null;
             m_InputStream.Reset();
             m_OutputStream.Reset();
         }
