@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace MainServer
 {
-    class ConnectInstance
+    public class ConnectInstance
     {
         private Socket m_Client = null;
         private CycleStream m_InputStream = new CycleStream(1024 * 8);
@@ -36,7 +36,7 @@ namespace MainServer
                 m_Client.Blocking = false;
             }
         }
-       
+
         public void OnSelectError()
         {
             SocketError err = (SocketError)m_Client.GetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.Error);
@@ -103,7 +103,7 @@ namespace MainServer
 
         public void Shutdown()
         {
-            if(m_Client != null)
+            if (m_Client != null)
             {
                 m_Client.Close();
                 m_Client = null;
@@ -115,6 +115,11 @@ namespace MainServer
             m_Client = null;
             m_InputStream.Reset();
             m_OutputStream.Reset();
+        }
+
+        public void SendPacket(PacketBase packet)
+        {
+
         }
     }
 }

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace MainServer
 {
-    class ConnectManager
+    public class ConnectManager
     {
         private Dictionary<Socket, ConnectInstance> m_ConnectDict = new Dictionary<Socket, ConnectInstance>();
         private List<ConnectInstance> m_ConnectList = new List<ConnectInstance>();

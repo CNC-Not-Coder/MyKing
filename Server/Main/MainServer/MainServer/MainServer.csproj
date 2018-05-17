@@ -51,6 +51,8 @@
     <Compile Include="CycleStream.cs" />
     <Compile Include="LogModule.cs" />
     <Compile Include="NetworkManager.cs" />
+    <Compile Include="PacketBase.cs" />
+    <Compile Include="PacketFactory.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
