@@ -104,7 +104,7 @@ namespace MainServer
             }
             return leftSizeToRead;
         }
-        public int ReadBuffer(byte[] buffer)
+        public int TryReadBuffer(byte[] buffer)
         {
             if (buffer == null)
             {

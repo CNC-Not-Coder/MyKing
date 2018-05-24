@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MainServer
 {
-    public class PacketFactory<T> where T : PacketBase<ProtoBuffData>, new()
+    public class PacketFactory<T> where T : Packet, new()
     {
         private List<T> m_PacketList = new List<T>();
         public T CreatePacket()

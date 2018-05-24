@@ -8,3 +8,9 @@ D:\Documents\MyKing\Server\Main\MainServer\MainServer\bin\Debug\WebSocket4Net.dl
 C:\Users\limotao\Documents\GitHub\MyKing\Server\Main\MainServer\MainServer\bin\Debug\MainServer.exe.config
 C:\Users\limotao\Documents\GitHub\MyKing\Server\Main\MainServer\MainServer\obj\Debug\MainServer.exe
 C:\Users\limotao\Documents\GitHub\MyKing\Server\Main\MainServer\MainServer\obj\Debug\MainServer.pdb
+C:\Users\limotao\Documents\GitHub\MyKing\Server\Main\MainServer\MainServer\bin\Debug\MainServer.exe
+C:\Users\limotao\Documents\GitHub\MyKing\Server\Main\MainServer\MainServer\bin\Debug\MainServer.pdb
+C:\Users\limotao\Documents\GitHub\MyKing\Server\Main\MainServer\MainServer\bin\Debug\protobuf-net.dll
+C:\Users\limotao\Documents\GitHub\MyKing\Server\Main\MainServer\MainServer\bin\Debug\WebSocket4Net.dll
+C:\Users\limotao\Documents\GitHub\MyKing\Server\Main\MainServer\MainServer\bin\Debug\protobuf-net.xml
+C:\Users\limotao\Documents\GitHub\MyKing\Server\Main\MainServer\MainServer\obj\Debug\MainServer.csprojResolveAssemblyReference.cache

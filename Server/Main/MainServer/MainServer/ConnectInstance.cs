@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ProtoBuf;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
@@ -12,16 +13,20 @@ namespace MainServer
         private Socket m_Client = null;
         private CycleStream m_InputStream = new CycleStream(1024 * 8);
         private CycleStream m_OutputStream = new CycleStream(1024 * 8);
-        private byte[] m_temp = new byte[1024]; // 用于发送和接收的临时buffer
+        private byte[] m_temp = new byte[1024 * 2]; // 用于发送和接收的临时buffer
+        private MemoryStream m_tempStream = null;
+        public const ushort c_headSize = 4;
         public Socket Client
         {
             get { return m_Client; }
         }
         public ConnectInstance()
         {
+            m_tempStream = new MemoryStream(m_temp, c_headSize, m_temp.Length - c_headSize);
         }
         public ConnectInstance(Socket client)
         {
+            m_tempStream = new MemoryStream(m_temp, c_headSize, m_temp.Length - c_headSize);
             //走到这里并不代表Socket已经连接成功，因为是NoBlocking的
             //第一次SelectWrite为true时才表示Succeed
             SetClient(client);
@@ -91,7 +96,7 @@ namespace MainServer
                 }
                 SocketError err = SocketError.Success;
                 int offset = m_OutputStream.GetReadIndex();
-                int size = m_OutputStream.ReadBuffer(m_temp);
+                int size = m_OutputStream.TryReadBuffer(m_temp);
                 int sendSize = m_Client.Send(m_temp, 0, size, SocketFlags.None, out err);
                 m_OutputStream.SetReadIndex(sendSize);
             }
@@ -117,9 +122,91 @@ namespace MainServer
             m_OutputStream.Reset();
         }
 
-        public void SendPacket(PacketBase packet)
+        public void SendPacket(Packet packet)
         {
+            try
+            {
+                if (m_OutputStream.IsFull())
+                {
+                    return;
+                }
+                m_tempStream.Seek(0, SeekOrigin.Begin);
+                m_tempStream.SetLength(0);
+                Serializer.Serialize(m_tempStream, packet.GetData());
+                ushort size = (ushort)m_tempStream.Position;
+                size += c_headSize;
+                GetBytes((short)size, m_temp, 0);
+                GetBytes((short)size, m_temp, 2);
+                int leftSize = m_OutputStream.GetLeftSizeToWrite();
+                if ( leftSize > size)
+                {
+                    m_OutputStream.WriteBuffer(m_temp, size);
+                    LogModule.LogInfo("SendPacket, Packet id : {0}, size : {1}", packet.GetPacketId(), size);
+                }
+                else
+                {
+                    LogModule.LogInfo("SendPacket, Output stream is not enough, Left : {0}, Require : {1}", leftSize, size);
+                }
+            }
+            catch (Exception e)
+            {
+                LogModule.LogInfo("SendPacket, Error : {0}", e.Message);
+            }
+           
+        }
 
+        public void ProcessCommands()
+        {
+            // 一次最多执行10个
+            for (int i = 0; i < 10; i++)
+            {
+                if (!m_InputStream.HasData())
+                {
+                    return;
+                }
+                int size = m_InputStream.TryReadBuffer(m_temp);
+                //parse packet id and length
+                if (size < 4)
+                {
+                    return;
+                }
+                ushort len = BitConverter.ToUInt16(m_temp, 0);
+                ushort packetId = BitConverter.ToUInt16(m_temp, 2);
+                if (size < len)
+                {
+                    //还没接收完或者包不完整
+                    return;
+                }
+                m_InputStream.SetReadIndex(len);
+
+                try
+                {
+                    // 调用handle
+                    Packet packet = null;
+                    if (packet != null)
+                    {
+                        m_tempStream.Seek(len - c_headSize, SeekOrigin.Begin);
+                        m_tempStream.SetLength(len - c_headSize);
+                        object data = Serializer.Deserialize(packet.GetDataType(), m_tempStream);//GC狂魔
+                        packet.Handle(this, data);
+                        packet.IsInUse = false;
+                    }
+                }
+                catch (Exception e)
+                {
+                    LogModule.LogInfo("Handle packet error, Packet id : {0}, len : {1}, msg : {2}", packetId, len, e.Message);
+                }
+            }
+        }
+        public static unsafe void GetBytes(short value, byte[] buffer, int offset)
+        {
+            if (buffer != null && buffer.Length - offset >= 2)
+            {
+                fixed (byte* numRef = buffer)
+                {
+                    *((short*)numRef) = value;
+                }
+            }
         }
     }
 }

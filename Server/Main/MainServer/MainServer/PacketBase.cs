@@ -3,16 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ProtoBuf;
+using System.IO;
+using MessageDefine;
+using MainServer.Packets;
 
 namespace MainServer
 {
-    public class ProtoBuffData
+    public abstract class Packet
     {
-
-    }
-    public abstract class PacketBase<T> where T : ProtoBuffData, new()
-    {
-        public abstract int GetPacketId();
+        public abstract ushort GetPacketId();
+        public abstract Type GetDataType();
+        public abstract object GetData();
         // 是否正在使用
         public bool IsInUse
         {
@@ -25,35 +27,45 @@ namespace MainServer
                 m_isInUse = value;
             }
         } 
-        private T m_dataObj;
         private bool m_isInUse;
-        public PacketBase()
-        {
-            m_dataObj = new T();
+        public Packet()
+        { 
             m_isInUse = false;
         }
-        public void ProcessBuffer(byte[] buffer)
-        {
-            
-        }
 
-        public virtual void Handle(ConnectInstance conn, T data)
+        public virtual void Handle(ConnectInstance conn, object data)
         {
-
         }
     }
 
-    public class Packet : PacketBase<ProtoBuffData> 
+    public class PacketBase<T> : Packet where T : new()
     {
-        public override int GetPacketId()
+        private T m_data;
+        public PacketBase()
         {
-            return -1;
+            m_data = new T();
         }
-
-        public override void Handle(ConnectInstance conn, ProtoBuffData data)
+        public override object GetData()
         {
-            
+            return m_data;
+        }
+        public override Type GetDataType()
+        {
+            return typeof(T);
+        }
+        public override ushort GetPacketId()
+        {
+            return 0;
         }
     }
-
+    public class PacketTest : PacketBase<Person>
+    {
+        public override ushort GetPacketId()
+        {
+            return (ushort)PacketIdDefine.Test;
+        }
+        public override void Handle(ConnectInstance conn, object data)
+        {
+        }
+    }
 }
