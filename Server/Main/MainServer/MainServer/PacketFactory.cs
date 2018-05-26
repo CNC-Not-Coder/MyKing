@@ -1,15 +1,25 @@
-﻿using System;
+﻿using MyNetwork.Packets;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace MainServer
+
+namespace MyNetwork
 {
-    public class PacketFactory<T> where T : Packet, new()
+    public interface IPacketFactory
     {
-        private List<T> m_PacketList = new List<T>();
-        public T CreatePacket()
+        object CreatePacket();
+        Type GetDataType();
+        PacketIdDefine GetPacketId();
+    }
+    public class PacketFactory<T> : IPacketFactory where T : new()
+    {
+        private List<PacketBase<T>> m_PacketList = new List<PacketBase<T>>();
+        private PacketIdDefine m_PacketId = PacketIdDefine.Invalid;
+        public PacketFactory(PacketIdDefine id)
+        {
+            m_PacketId = id;
+        }
+        public object CreatePacket()
         {
             for (int i = 0; i < m_PacketList.Count; i++)
             {
@@ -19,9 +29,19 @@ namespace MainServer
                     return m_PacketList[i];
                 }
             }
-            T packet = new T();
+            PacketBase<T> packet = new PacketBase<T>();
+            packet.SetPacketId((ushort)m_PacketId);
             m_PacketList.Add(packet);
             return packet;
+        }
+
+        public Type GetDataType()
+        {
+            return typeof(T);
+        }
+        public PacketIdDefine GetPacketId()
+        {
+            return m_PacketId;
         }
     }
 }

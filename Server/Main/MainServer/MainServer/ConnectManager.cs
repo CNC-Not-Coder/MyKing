@@ -1,14 +1,10 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace MainServer
+namespace MyNetwork
 {
-    public class ConnectManager
+    public partial class ConnectManager
     {
         private Dictionary<Socket, ConnectInstance> m_ConnectDict = new Dictionary<Socket, ConnectInstance>();
         private List<ConnectInstance> m_ConnectList = new List<ConnectInstance>();
@@ -16,7 +12,7 @@ namespace MainServer
 
         public ConnectManager()
         {
-
+            RegisterPackets();
         }
 
         public void OnNewConnectInstance(Socket client)

@@ -1,20 +1,20 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ProtoBuf;
-using System.IO;
 using MessageDefine;
-using MainServer.Packets;
+using MyNetwork.Packets;
 
-namespace MainServer
+namespace MyNetwork
 {
     public abstract class Packet
     {
-        public abstract ushort GetPacketId();
-        public abstract Type GetDataType();
         public abstract object GetData();
+        public ushort GetPacketId()
+        {
+            return m_packetId;
+        }
+        public void SetPacketId(ushort val)
+        {
+            m_packetId = val;
+        }
         // 是否正在使用
         public bool IsInUse
         {
@@ -28,13 +28,11 @@ namespace MainServer
             }
         } 
         private bool m_isInUse;
+        private ushort m_packetId;
         public Packet()
-        { 
-            m_isInUse = false;
-        }
-
-        public virtual void Handle(ConnectInstance conn, object data)
         {
+            m_isInUse = false;
+            m_packetId = 0;
         }
     }
 
@@ -49,23 +47,17 @@ namespace MainServer
         {
             return m_data;
         }
-        public override Type GetDataType()
-        {
-            return typeof(T);
-        }
-        public override ushort GetPacketId()
-        {
-            return 0;
-        }
     }
-    public class PacketTest : PacketBase<Person>
+    public interface IPacketHandler
     {
-        public override ushort GetPacketId()
+        void Handle(ConnectInstance conn, object data);
+    }
+    
+    public class PacketTestHandler : IPacketHandler
+    {
+        public void Handle(ConnectInstance conn, object data)
         {
-            return (ushort)PacketIdDefine.Test;
-        }
-        public override void Handle(ConnectInstance conn, object data)
-        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -1,12 +1,9 @@
 ﻿using ProtoBuf;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace MainServer
+namespace MyNetwork
 {
     public class ConnectInstance
     {
@@ -136,7 +133,7 @@ namespace MainServer
                 ushort size = (ushort)m_tempStream.Position;
                 size += c_headSize;
                 GetBytes((short)size, m_temp, 0);
-                GetBytes((short)size, m_temp, 2);
+                GetBytes((short)packet.GetPacketId(), m_temp, 2);
                 int leftSize = m_OutputStream.GetLeftSizeToWrite();
                 if ( leftSize > size)
                 {
@@ -147,6 +144,7 @@ namespace MainServer
                 {
                     LogModule.LogInfo("SendPacket, Output stream is not enough, Left : {0}, Require : {1}", leftSize, size);
                 }
+                packet.IsInUse = false;
             }
             catch (Exception e)
             {
@@ -155,7 +153,7 @@ namespace MainServer
            
         }
 
-        public void ProcessCommands()
+        public void ProcessCommands(ConnectManager connMan)
         {
             // 一次最多执行10个
             for (int i = 0; i < 10; i++)
@@ -182,14 +180,17 @@ namespace MainServer
                 try
                 {
                     // 调用handle
-                    Packet packet = null;
-                    if (packet != null)
+                    IPacketFactory factory = connMan.GetPacketFactory((Packets.PacketIdDefine)packetId);
+                    if (factory != null)
                     {
                         m_tempStream.Seek(len - c_headSize, SeekOrigin.Begin);
                         m_tempStream.SetLength(len - c_headSize);
-                        object data = Serializer.Deserialize(packet.GetDataType(), m_tempStream);//GC狂魔
-                        packet.Handle(this, data);
-                        packet.IsInUse = false;
+                        object data = Serializer.Deserialize(factory.GetDataType(), m_tempStream);//GC狂魔
+                        IPacketHandler handler = connMan.GetPacketHandler((Packets.PacketIdDefine)packetId);
+                        if (handler != null)
+                        {
+                            handler.Handle(this, data);
+                        }
                     }
                 }
                 catch (Exception e)

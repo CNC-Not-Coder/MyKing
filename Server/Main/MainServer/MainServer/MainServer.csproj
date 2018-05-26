@@ -63,6 +63,7 @@
     <Compile Include="PacketFactory.cs" />
     <Compile Include="Packets\MessageDefine.cs" />
     <Compile Include="Packets\PacketIdDefine.cs" />
+    <Compile Include="Packets\PacketRegister.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
