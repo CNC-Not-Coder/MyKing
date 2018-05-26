@@ -54,16 +54,16 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ConnectInstance.cs" />
-    <Compile Include="ConnectManager.cs" />
-    <Compile Include="CycleStream.cs" />
+    <Compile Include="Network\ConnectInstance.cs" />
+    <Compile Include="Network\ConnectManager.cs" />
+    <Compile Include="Network\CycleStream.cs" />
     <Compile Include="LogModule.cs" />
-    <Compile Include="NetworkManager.cs" />
-    <Compile Include="PacketBase.cs" />
-    <Compile Include="PacketFactory.cs" />
-    <Compile Include="Packets\MessageDefine.cs" />
-    <Compile Include="Packets\PacketIdDefine.cs" />
-    <Compile Include="Packets\PacketRegister.cs" />
+    <Compile Include="Network\NetworkManager.cs" />
+    <Compile Include="Network\PacketBase.cs" />
+    <Compile Include="Network\PacketFactory.cs" />
+    <Compile Include="Network\Packets\MessageDefine.cs" />
+    <Compile Include="Network\Packets\PacketIdDefine.cs" />
+    <Compile Include="Network\Packets\PacketRegister.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

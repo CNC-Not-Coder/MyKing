@@ -7,11 +7,13 @@ using System.Text;
 using System.Threading.Tasks;
 using MessageDefine;
 using ProtoBuf;
+using MyNetwork;
 
 namespace MainServer
 {
     class Program
     {
+        ConnectManager m_ConnectManager;
         static void Main(string[] args)
         {
             Console.WriteLine("Hello Server !");
