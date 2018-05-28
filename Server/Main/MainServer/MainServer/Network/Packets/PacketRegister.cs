@@ -46,7 +46,7 @@ namespace MyNetwork
                 IPacketHandler handler = m_Handlers[id];
                 return handler;
             }
-            LogModule.LogInfo("Can't find packet handler for id : {0}", id);
+            LogModule.LogInfo("Can't find packet handler for id enum : {0}", id);
             return null;
         }
         public IPacketFactory GetPacketFactory(PacketIdDefine id)
@@ -55,7 +55,7 @@ namespace MyNetwork
             {
                 return m_Packets[id];
             }
-            LogModule.LogInfo("Can't find packet factory for id : {0}", id);
+            LogModule.LogInfo("Can't find packet factory for id enum : {0}", id);
             return null;
         }
     }

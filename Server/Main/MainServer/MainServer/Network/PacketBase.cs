@@ -57,7 +57,7 @@ namespace MyNetwork
     {
         public void Handle(ConnectInstance conn, object data)
         {
-            throw new NotImplementedException();
+            LogModule.LogInfo("PacketTestHandler handled!");
         }
     }
 }

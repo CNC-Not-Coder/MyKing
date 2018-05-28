@@ -5,7 +5,7 @@ namespace MyNetwork
     class CycleStream
     {
         private int m_headIndex = 0;
-        private int m_tailIndex = -1;//每次从tail+1开始写数据
+        private int m_tailIndex = -1;//因为每次从tail+1开始写数据，tail==-1是区分full和empty的标记
         private byte[] m_byteStream = null;
         private int m_maxSize = 0;
         public CycleStream(int size)
@@ -26,23 +26,11 @@ namespace MyNetwork
         }
         public bool HasData()
         {
-            return m_tailIndex != -1;
+            return GetLeftSizeToRead() > 0;
         }
         public bool IsFull()
         {
-            if (m_tailIndex == -1)
-            {//tail == -1表示Stream里没数据
-                return false;
-            }
-            if ((m_headIndex - m_tailIndex) == 1)
-            {
-                return true;
-            }
-            else if (m_tailIndex == (GetMaxSize() - 1) && m_headIndex == 0)
-            {//tail和head都在边界上
-                return true;
-            }
-            return false;
+            return GetLeftSizeToWrite() <= 0;
         }
         public int GetWriteIndex()
         {
@@ -58,9 +46,13 @@ namespace MyNetwork
         public int GetLeftSizeToWrite()
         {//返回剩余可写入的size
             int leftSizeToWrite = 0;
+            if (m_tailIndex == -1)
+            {
+                return GetMaxSize();
+            }
             if (m_tailIndex < m_headIndex)
-            {//tail在head前面，从tail写到head - 1
-                leftSizeToWrite = m_headIndex - m_tailIndex;
+            {//tail在head前面，从tail+1写到head - 1
+                leftSizeToWrite = m_headIndex - m_tailIndex - 1;
             }
             else
             {//tail在head后面或者重合
@@ -90,6 +82,10 @@ namespace MyNetwork
         public int GetLeftSizeToRead()
         {//返回剩余可读取的size
             int leftSizeToRead = 0;
+            if (m_tailIndex == -1)
+            {
+                return 0;
+            }
             if (m_tailIndex >= m_headIndex)
             {
                 leftSizeToRead = m_tailIndex - m_headIndex + 1;

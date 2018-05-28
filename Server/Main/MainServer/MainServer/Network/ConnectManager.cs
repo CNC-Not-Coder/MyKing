@@ -8,8 +8,10 @@ namespace MyNetwork
     {
         private Dictionary<Socket, ConnectInstance> m_ConnectDict = new Dictionary<Socket, ConnectInstance>();
         private List<ConnectInstance> m_ConnectList = new List<ConnectInstance>();
-        private List<Socket> m_Clients = new List<Socket>();
-
+        private List<Socket> m_Clients = null;
+        private List<Socket> m_ErrorCheck = new List<Socket>();
+        private List<Socket> m_ReadCheck = new List<Socket>();
+        private List<Socket> m_WriteCheck = new List<Socket>();
         public ConnectManager()
         {
             RegisterPackets();
@@ -23,17 +25,45 @@ namespace MyNetwork
                 if (conn != null)
                 {
                     conn.SetClient(client);
-                    m_ConnectList.Add(conn);
                     m_ConnectDict.Add(client, conn);
                 }
             }
         }
+
+        public void ClearInstance()
+        {
+            for (int i = 0; i < m_ConnectList.Count; i++)
+            {
+                if (m_ConnectList[i].Client != null)
+                {
+                    m_ConnectList[i].Client.Close();
+                }
+            }
+            m_ConnectList.Clear();
+        }
         
+        public void Select()
+        {
+            try
+            {
+                bool hasData = GetClientList(m_ErrorCheck);
+                hasData = hasData && GetClientList(m_ReadCheck);
+                hasData = hasData && GetClientList(m_WriteCheck);
+                if (hasData)
+                {
+                    Socket.Select(m_ReadCheck, m_WriteCheck, m_ErrorCheck, 0);
+                }
+            }
+            catch(Exception e)
+            {
+                LogModule.LogInfo(string.Format("Select call error, meassage : {0}", e.Message));
+            }
+        }
+
         public void ProcessError()
         {
             //select error
-            GetClientList(m_Clients);
-            Socket.Select(null, null, m_Clients, 0);
+            m_Clients = m_ErrorCheck;
             if (m_Clients.Count > 0)
             {
                 for (int i = 0; i < m_Clients.Count; i++)
@@ -59,8 +89,7 @@ namespace MyNetwork
         public void ProcessInput()
         {
             //select read
-            GetClientList(m_Clients);
-            Socket.Select(m_Clients, null, null, 0);
+            m_Clients = m_ReadCheck;
             if (m_Clients.Count > 0)
             {
                 for (int i = 0; i < m_Clients.Count; i++)
@@ -86,8 +115,7 @@ namespace MyNetwork
         public void ProcessOutput()
         {
             //select write
-            GetClientList(m_Clients);
-            Socket.Select(null, m_Clients, null, 0);
+            m_Clients = m_WriteCheck;
             if (m_Clients.Count > 0)
             {
                 for (int i = 0; i < m_Clients.Count; i++)
@@ -110,15 +138,22 @@ namespace MyNetwork
             }
         }
 
+        public void ProcessCommands()
+        {
+            for (int i = 0; i < m_ConnectList.Count; i++)
+            {
+                if (m_ConnectList[i].Client != null)
+                {
+                    m_ConnectList[i].ProcessCommands(this);
+                }
+            }
+        }
+
         public void Tick()
         {
             try
             {
-                ProcessError();
-
-                ProcessInput();
-
-                ProcessOutput();
+                
                 
             }
             catch (Exception e)
@@ -126,8 +161,6 @@ namespace MyNetwork
 
                 LogModule.LogInfo("Select error, Message:{0}", e.Message);
             }
-
-            m_Clients.Clear();
         }
 
         private ConnectInstance NewConnectInstance()
@@ -139,10 +172,11 @@ namespace MyNetwork
                     return m_ConnectList[i];
                 }
             }
-
-            return new ConnectInstance();
+            ConnectInstance conn = new ConnectInstance();
+            m_ConnectList.Add(conn);
+            return conn;
         }
-        private void GetClientList(List<Socket> clients)
+        private bool GetClientList(List<Socket> clients)
         {
             if (clients != null)
             {
@@ -154,7 +188,9 @@ namespace MyNetwork
                         clients.Add(m_ConnectList[i].Client);
                     }
                 }
+                return clients.Count > 0;
             }
+            return false;
         }
     }
 }

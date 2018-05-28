@@ -22,6 +22,10 @@ namespace MyNetwork
             {
                 return m_AcceptDelegate;
             }
+            set
+            {
+                m_AcceptDelegate = value;
+            }
         }
 
         private Socket m_Listener = null;
@@ -38,7 +42,6 @@ namespace MyNetwork
             m_Listener = null;
             m_Listeners.Clear();
             m_Port = 9999;
-            m_AcceptDelegate = null;
         }
         public bool Start(int port)
         {
@@ -48,7 +51,7 @@ namespace MyNetwork
                 m_Port = port;
 
                 IPHostEntry ipHostEntry = Dns.GetHostEntry(Dns.GetHostName());
-                IPAddress ipAddress = ipHostEntry.AddressList[0];
+                IPAddress ipAddress = new IPAddress(new byte[] { 10, 12, 5, 162 });
                 m_Listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 m_Listener.NoDelay = true;
                 m_Listener.LingerState = new LingerOption(false, 0);
@@ -56,11 +59,16 @@ namespace MyNetwork
                 m_Listener.Bind(new IPEndPoint(ipAddress, m_Port));
                 m_Listener.Listen(10); /// for 10 clients at most one time.
 
+                LogModule.LogInfo("Start Tcp Listener succeed on port: {0}, ip: {1}", port, ipAddress.ToString());
                 return true;
+            }
+            catch (SocketException e)
+            {
+                LogModule.LogInfo("Start Tcp Listener failed on port: {0}, Message: {1}", m_Port, e.Message);
             }
             catch (Exception e)
             {
-                LogModule.LogInfo("Start Tcp Listener failed on port: {0}, Message: {1}", m_Port, e.Message);
+                LogModule.LogInfo("Catch an exception , Message : {0}", e.Message);
             }
             return false;
         }

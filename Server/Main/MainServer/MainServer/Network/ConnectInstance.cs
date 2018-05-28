@@ -1,6 +1,7 @@
 ﻿using ProtoBuf;
 using System;
 using System.IO;
+using System.Net;
 using System.Net.Sockets;
 
 namespace MyNetwork
@@ -66,6 +67,12 @@ namespace MyNetwork
                 {
                     return;
                 }
+                //客户端主动断开连接，也会是可读
+                if (m_Client.Connected == false || m_Client.Available == 0)
+                {
+                    Shutdown();
+                    return;
+                }
                 SocketError err = SocketError.Success;
                 int offset = m_InputStream.GetWriteIndex();
                 int size = Math.Min(m_InputStream.GetLeftSizeToWrite(), m_temp.Length);
@@ -75,6 +82,11 @@ namespace MyNetwork
                 {
                     LogModule.LogInfo("Fatal Error, recvSize != writeSize, socket error : {0}", err);
                     Shutdown();
+                }
+                else
+                {
+                    IPEndPoint ip = m_Client.RemoteEndPoint as IPEndPoint;
+                    LogModule.LogInfo("Recv data from client : {0}, port : {1}, size : {2}", ip.Address, ip.Port, recvSize);
                 }
             }
             catch (Exception e)
@@ -107,6 +119,8 @@ namespace MyNetwork
         {
             if (m_Client != null)
             {
+                IPEndPoint ip = m_Client.RemoteEndPoint as IPEndPoint;
+                LogModule.LogInfo("On connection shut down, ip : {0} , port : {1}", ip.Address, ip.Port);
                 m_Client.Close();
                 m_Client = null;
             }
