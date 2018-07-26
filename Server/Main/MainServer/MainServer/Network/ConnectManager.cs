@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MessageDefine;
+using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
 
@@ -153,8 +154,23 @@ namespace MyNetwork
         {
             try
             {
-                
-                
+                var packet = CreatePacket<Person>(Packets.PacketIdDefine.Test);
+                Person p = packet.GetData() as Person;
+                p.Id = 222222;
+                p.Name = "mordyyyy";
+                p.Address = new Address();
+                p.Address.Line1 = "ddddd";
+                p.Address.Line2 = "ttttt";
+
+                for (int i = 0; i < m_ConnectList.Count; i++)
+                {
+                    if (m_ConnectList[i].Client != null)
+                    {
+                        m_ConnectList[i].SendPacket(packet);
+                    }
+                    
+                }
+
             }
             catch (Exception e)
             {

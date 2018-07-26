@@ -28,16 +28,16 @@ namespace MyNetwork
         }
 
        
-        public T CreatePacket<T>(PacketIdDefine id) where T : Packet, new()
+        public PacketBase<T> CreatePacket<T>(PacketIdDefine id) where T : new()
         {
             PacketIdDefine key = id;
             if (m_Packets.ContainsKey(key))
             {
                 IPacketFactory factory = m_Packets[key];
-                return factory.CreatePacket() as T;
+                return factory.CreatePacket() as PacketBase<T>;
             }
             LogModule.LogInfo("Can't find packet factory for type : {0}", key);
-            return new T();
+            return null;
         }
         public IPacketHandler GetPacketHandler(PacketIdDefine id)
         {

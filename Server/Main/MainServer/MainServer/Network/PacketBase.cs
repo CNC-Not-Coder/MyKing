@@ -57,7 +57,8 @@ namespace MyNetwork
     {
         public void Handle(ConnectInstance conn, object data)
         {
-            LogModule.LogInfo("PacketTestHandler handled!");
+            Person p = data as Person;
+            LogModule.LogInfo("PacketTestHandler handled!, {0}, {1}, {2}, {3}", p.Id, p.Name, p.Address.Line1, p.Address.Line2);
         }
     }
 }

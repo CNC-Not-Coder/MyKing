@@ -9,10 +9,12 @@ namespace MyNetwork
     public class ConnectInstance
     {
         private Socket m_Client = null;
-        private CycleStream m_InputStream = new CycleStream(1024 * 8);
-        private CycleStream m_OutputStream = new CycleStream(1024 * 8);
-        private byte[] m_temp = new byte[1024 * 2]; // 用于发送和接收的临时buffer
+        private CycleStream m_InputStream = new CycleStream(256);
+        private CycleStream m_OutputStream = new CycleStream(256);
+        private byte[] m_temp = new byte[256]; // 用于发送和接收的临时buffer
         private MemoryStream m_tempStream = null;
+        private byte[] m_tempSend = new byte[256]; // 用于发送和接收的临时buffer
+        private MemoryStream m_tempStreamSend = null;
         public const ushort c_headSize = 4;
         public Socket Client
         {
@@ -21,10 +23,12 @@ namespace MyNetwork
         public ConnectInstance()
         {
             m_tempStream = new MemoryStream(m_temp, c_headSize, m_temp.Length - c_headSize);
+            m_tempStreamSend = new MemoryStream(m_tempSend, c_headSize, m_tempSend.Length - c_headSize);
         }
         public ConnectInstance(Socket client)
         {
             m_tempStream = new MemoryStream(m_temp, c_headSize, m_temp.Length - c_headSize);
+            m_tempStreamSend = new MemoryStream(m_tempSend, c_headSize, m_tempSend.Length - c_headSize);
             //走到这里并不代表Socket已经连接成功，因为是NoBlocking的
             //第一次SelectWrite为true时才表示Succeed
             SetClient(client);
@@ -105,8 +109,8 @@ namespace MyNetwork
                 }
                 SocketError err = SocketError.Success;
                 int offset = m_OutputStream.GetReadIndex();
-                int size = m_OutputStream.TryReadBuffer(m_temp);
-                int sendSize = m_Client.Send(m_temp, 0, size, SocketFlags.None, out err);
+                int size = m_OutputStream.TryReadBuffer(m_tempSend);
+                int sendSize = m_Client.Send(m_tempSend, 0, size, SocketFlags.None, out err);
                 m_OutputStream.SetReadIndex(sendSize);
             }
             catch (Exception e)
@@ -141,17 +145,17 @@ namespace MyNetwork
                 {
                     return;
                 }
-                m_tempStream.Seek(0, SeekOrigin.Begin);
-                m_tempStream.SetLength(0);
-                Serializer.Serialize(m_tempStream, packet.GetData());
-                ushort size = (ushort)m_tempStream.Position;
+                m_tempStreamSend.Seek(0, SeekOrigin.Begin);
+                m_tempStreamSend.SetLength(0);
+                Serializer.Serialize(m_tempStreamSend, packet.GetData());
+                ushort size = (ushort)m_tempStreamSend.Position;
                 size += c_headSize;
-                GetBytes((short)size, m_temp, 0);
-                GetBytes((short)packet.GetPacketId(), m_temp, 2);
+                GetBytes((short)size, m_tempSend, 0);
+                GetBytes((short)packet.GetPacketId(), m_tempSend, 2);
                 int leftSize = m_OutputStream.GetLeftSizeToWrite();
                 if ( leftSize > size)
                 {
-                    m_OutputStream.WriteBuffer(m_temp, size);
+                    m_OutputStream.WriteBuffer(m_tempSend, size);
                     LogModule.LogInfo("SendPacket, Packet id : {0}, size : {1}", packet.GetPacketId(), size);
                 }
                 else
@@ -197,7 +201,7 @@ namespace MyNetwork
                     IPacketFactory factory = connMan.GetPacketFactory((Packets.PacketIdDefine)packetId);
                     if (factory != null)
                     {
-                        m_tempStream.Seek(len - c_headSize, SeekOrigin.Begin);
+                        m_tempStream.Seek(0, SeekOrigin.Begin);
                         m_tempStream.SetLength(len - c_headSize);
                         object data = Serializer.Deserialize(factory.GetDataType(), m_tempStream);//GC狂魔
                         IPacketHandler handler = connMan.GetPacketHandler((Packets.PacketIdDefine)packetId);
@@ -210,6 +214,8 @@ namespace MyNetwork
                 catch (Exception e)
                 {
                     LogModule.LogInfo("Handle packet error, Packet id : {0}, len : {1}, msg : {2}", packetId, len, e.Message);
+                    Shutdown();
+                    break;
                 }
             }
         }
